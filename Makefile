@@ -29,6 +29,7 @@ LDFLAGS    += -L$(UCMX_DIR)/lib -lucmx_stm32f4
 SRC_FILES  := $(wildcard $(SRC_DIR)/*.c)
 OBJ_FILES  := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES))
 
+CFLAGS     += -g -ggdb3 -O0
 
 all: $(ELF_PATH) $(BIN_PATH)
 
