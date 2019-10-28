@@ -10,8 +10,16 @@
 #include <unicore-mx/usb/class/midi.h>
 
 #include "usb-descriptors.h"
+#include "display.h"
+#include "spi.h"
 
+#define SPI1_PIN_AF                     5 /* Alt mode for SPI */
 
+#define SPI_DISP_RESET              GPIO3 /* A3: reset line */
+#define SPI_DISP_DC                 GPIO4 /* A4: Display Data/#C */
+#define SPI1_CLOCK_PIN              GPIO5 /* A5 */
+#define SPI1_MISO_PIN               GPIO6 /* A6 - disconnected */
+#define SPI1_MOSI_PIN               GPIO7 /* A7 */
 
 /* - */
 
@@ -57,20 +65,36 @@ static void cdcacm_set_config(usbd_device *usbd_dev,
 
 // - //
 
+void display_transport_reset(void)
 {
+    volatile int j;
 
+    gpio_set(GPIOA, SPI_DISP_RESET);
 
+    for(j = 0; j < 48000; j++)
+        ;
 
+    gpio_clear(GPIOA, SPI_DISP_RESET);
 
+    for(j = 0; j < 480000; j++)
+        ;
+
+    gpio_set(GPIOA, SPI_DISP_RESET);
 }
 
+void display_transport_set_control(void)
 {
+    gpio_clear(GPIOA, SPI_DISP_DC);
 }
 
+void display_transport_set_data(void)
 {
+    gpio_set(GPIOA, SPI_DISP_DC);
 }
 
+void display_transport_write(char byte)
 {
+    spi_write(byte);
 }
 
 // - //
@@ -83,14 +107,52 @@ int main(void)
     {
         rcc_clock_setup_hse_3v3(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_48MHZ]);
 
+        rcc_periph_clock_enable(RCC_SPI1);
         rcc_periph_clock_enable(RCC_GPIOA);
         rcc_periph_clock_enable(RCC_GPIOB);
     }
 
     {
-        gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP,
-             GPIO9 | GPIO11 | GPIO12);
-        gpio_set_af(GPIOA, GPIO_AF10, GPIO9 | GPIO11 | GPIO12);
+        gpio_mode_setup(
+            GPIOA,
+            GPIO_MODE_AF,
+            GPIO_PUPD_PULLUP,
+            GPIO9 | GPIO11 | GPIO12
+        );
+
+        gpio_set_af(
+            GPIOA,
+            GPIO_AF10,
+            GPIO9 | GPIO11 | GPIO12
+        );
+    }
+
+    {
+        gpio_mode_setup(
+            GPIOA,
+            GPIO_MODE_OUTPUT,
+            GPIO_PUPD_PULLUP,
+            SPI_DISP_RESET | SPI_DISP_DC
+        );
+
+        gpio_mode_setup(
+            GPIOA,
+            GPIO_MODE_AF,
+            GPIO_PUPD_PULLUP,
+            SPI1_MOSI_PIN | SPI1_MISO_PIN | SPI1_CLOCK_PIN
+        );
+
+        gpio_set_af(
+            GPIOA,
+            SPI1_PIN_AF,
+            SPI1_MOSI_PIN | SPI1_MISO_PIN | SPI1_CLOCK_PIN
+        );
+    }
+
+    {
+        spi_init(0, 0);
+        display_transport_reset();
+        display_init();
     }
 
     {
@@ -101,6 +163,8 @@ int main(void)
     }
 
     int delay_counter = 0;
+
+    display_init();
 
     while (1) {
         usbd_poll(usbd_dev, 0);
