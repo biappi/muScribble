@@ -47,7 +47,7 @@ $(UCMX_A):
 	make -C $(UCMX_DIR) TARGETS=stm32/f4 FP_FLAGS="-mfloat-abi=soft"
 
 
-$(ELF_PATH): $(BUILD_DIR)/.build $(OBJ_FILES) $(UCMX_A)
+$(ELF_PATH): $(BUILD_DIR)/.build $(UCMX_A) $(OBJ_FILES)
 	$(LD) -o $@ $(OBJ_FILES) $(LDFLAGS) -T$(LD_SCRIPT)
 
 
