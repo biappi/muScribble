@@ -9,7 +9,6 @@
 #include <unicore-mx/usb/class/audio.h>
 #include <unicore-mx/usb/class/midi.h>
 
-#include "usb-descriptors.h"
 #include "display.h"
 #include "spi.h"
 
@@ -23,45 +22,12 @@
 
 /* - */
 
-void cdcacm_control_request(
+const struct usbd_info usb_midi_device_info;
+
+void usb_midi_set_config(
     usbd_device *usbd_dev,
-    uint8_t ep,
-    const struct usb_setup_data *setup_data
+    const struct usb_config_descriptor *cfg
 );
-
-void cdcacm_submit_transmit(
-    usbd_device *usbd_dev,
-    void *data,
-    size_t len
-);
-
-void cdcacm_submit_receive(usbd_device *usbd_dev);
-
-void usb_midi_submit_receive(usbd_device *usbd_dev);
-
-/* - */
-
-static void cdcacm_set_config(usbd_device *usbd_dev,
-                const struct usb_config_descriptor *cfg)
-{
-    (void)cfg;
-
-    {
-        usbd_ep_prepare(usbd_dev, 0x01, USBD_EP_BULK, 64, USBD_INTERVAL_NA, USBD_EP_NONE);
-        usbd_ep_prepare(usbd_dev, 0x82, USBD_EP_BULK, 64, USBD_INTERVAL_NA, USBD_EP_NONE);
-        usbd_ep_prepare(usbd_dev, 0x83, USBD_EP_INTERRUPT, 16, USBD_INTERVAL_NA, USBD_EP_NONE);
-
-        cdcacm_submit_receive(usbd_dev);
-    }
-
-    {
-        usbd_ep_prepare(usbd_dev, 0x04, USBD_EP_BULK, 64, USBD_INTERVAL_NA, USBD_EP_NONE);
-        usbd_ep_prepare(usbd_dev, 0x84, USBD_EP_BULK, 64, USBD_INTERVAL_NA, USBD_EP_NONE);
-
-        usb_midi_submit_receive(usbd_dev);
-    }
-
-}
 
 // - //
 
@@ -97,6 +63,39 @@ void display_transport_write(char byte)
     spi_write(byte);
     for (volatile int d = 0; d < 1000; d++)
         ;
+}
+
+
+// - //
+
+
+void usb_midi_received_callback(const uint8_t * buf, size_t len) {
+    //                                1         2
+    //                      012345678901234567890123456
+    static char string[] = " * MIDI in 00000000 ";
+
+    int t  = len;
+
+    int t1 = (t      ) & 0xff;
+    int t2 = (t >>  8) & 0xff;
+    int t3 = (t >> 16) & 0xff;
+    int t4 = (t >> 24) & 0xff;
+
+    #define nibble_char(x) ((x < 10) ? '0' + x : 'a' + x)
+
+    string[18] = nibble_char((t1 >> 0) & 0x0f);
+    string[17] = nibble_char((t1 >> 4) & 0x0f);
+
+    string[16] = nibble_char((t2 >> 0) & 0x0f);
+    string[15] = nibble_char((t2 >> 4) & 0x0f);
+
+    string[14] = nibble_char((t3 >> 0) & 0x0f);
+    string[13] = nibble_char((t3 >> 4) & 0x0f);
+
+    string[12] = nibble_char((t4 >> 0) & 0x0f);
+    string[11] = nibble_char((t4 >> 4) & 0x0f);
+
+    display_send_string(string);
 }
 
 // - //
@@ -158,10 +157,9 @@ int main(void)
     }
 
     {
-        usbd_dev = usbd_init(USBD_STM32_OTG_FS, NULL, &info);
+        usbd_dev = usbd_init(USBD_STM32_OTG_FS, NULL, &usb_midi_device_info);
 
-        usbd_register_set_config_callback(usbd_dev, cdcacm_set_config);
-        usbd_register_setup_callback(usbd_dev, cdcacm_control_request);
+        usbd_register_set_config_callback(usbd_dev, usb_midi_set_config);
     }
 
     int delay_counter = 0;
@@ -174,7 +172,6 @@ int main(void)
 
         if (delay_counter > 1000000) {
             const char alive[] = "ALIVE 2 ]\r\n";
-            cdcacm_submit_transmit(usbd_dev, (void *)alive, sizeof(alive));
             display_send_string("* ALIVE ");
             delay_counter = 0;
         }
