@@ -95,6 +95,8 @@ void display_transport_set_data(void)
 void display_transport_write(char byte)
 {
     spi_write(byte);
+    for (volatile int d = 0; d < 1000; d++)
+        ;
 }
 
 // - //
@@ -173,6 +175,7 @@ int main(void)
         if (delay_counter > 1000000) {
             const char alive[] = "ALIVE 2 ]\r\n";
             cdcacm_submit_transmit(usbd_dev, (void *)alive, sizeof(alive));
+            display_send_string("* ALIVE ");
             delay_counter = 0;
         }
     }

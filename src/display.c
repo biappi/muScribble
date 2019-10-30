@@ -7,7 +7,7 @@
 #include <unicore-mx/stm32/rcc.h>
 #include <unicore-mx/stm32/gpio.h>
 
-extern const unsigned char fb_font[256][8];
+extern const unsigned char font[256][8];
 
 #define WIDTH 128
 #define PIXEL_HEIGHT 64
@@ -75,59 +75,39 @@ static inline void display_send_cmd2(uint8_t cmd, uint8_t arg1, uint8_t arg2)
     display_transport_write(arg2);
 }
 
-void display_init(void)
-{
-    int i;
-    int k = 0;
-    int row = 0;
-    volatile int j;
+static inline void display_send_character(char c) {
+    display_send_data(font[c], 8);
+}
 
-    uint8_t dbuf2[64] = {0};
+void display_send_string(const char *string) {
+    while (*string != 0)
+        display_send_character(*string++);
+}
 
-    int page = 0;
-    int seg = 0;
+void display_send_empty_line(void) {
+    uint8_t test[32] = {0x00};
+    display_send_data(test, sizeof(test));
+    display_send_data(test, sizeof(test));
+    display_send_data(test, sizeof(test));
+    display_send_data(test, sizeof(test));
+}
 
-    char test[] = "Hello, world!";
+void display_send_empty_screen(void) {
+    for (int i = 0; i < 8; i++)
+        display_send_empty_line();
+}
 
+void display_goto_line(int line) {
+    display_send_cmd2(SSD1306_PAGEADDR, line & 0x0f, 0xff);
+    display_send_cmd2(SSD1306_COLUMNADDR, 0x00, WIDTH - 1);
+}
+
+void display_init(void) {
     display_send_cmd(SSD1306_DISPLAYOFF);
-    display_send_cmd1(0xD6, 0x01);
-    display_send_cmd(0xA1);
-    display_send_cmd1(SSD1306_SETCONTRAST, 0xCF);
-    display_send_cmd1(SSD1306_CHARGEPUMP,  0x14);
-    display_send_cmd1(SSD1306_MEMORYMODE,  0x00);
-    display_send_cmd1(SSD1306_SETCOMPINS, 0x12);
-    display_send_cmd1(SSD1306_SETDISPLAYOFFSET, 0x40);
-
-    display_send_cmd1(SSD1306_SETVCOMDETECT, 0x00);
-    display_send_cmd1(SSD1306_SETMULTIPLEX, 63);
-    display_send_cmd(SSD1306_COMSCANINC);
-    display_send_cmd(SSD1306_DISPLAYALLON_RESUME);
+    display_send_cmd1(SSD1306_CHARGEPUMP, 0x14);
+    display_send_cmd1(SSD1306_MEMORYMODE, 0x00);
+    display_goto_line(0);
+    display_send_empty_screen();
     display_send_cmd(SSD1306_DISPLAYON);
-    
-    display_send_cmd2(SSD1306_PAGEADDR, 0, 0xFF);
-    display_send_cmd2(SSD1306_COLUMNADDR, 0, WIDTH - 1);
-    display_send_cmd1(SSD1306_SETSTARTLINE, 0);
-
-    for (page = 0; page < 4; page++) {
-        display_send_cmd2(SSD1306_PAGEADDR, page, 0xFF);
-
-        for (seg= 0; seg < 32; seg++) {
-            display_send_data(dbuf2, 8);
-        }
-
-        display_send_cmd1(SSD1306_SETSTARTLINE, row);
-    }
-    
-    display_send_cmd1(SSD1306_SETSTARTLINE, 0);
-
-    for (page = 0; page < 4; page++) {
-        display_send_cmd2(SSD1306_PAGEADDR, page, 0xFF);
-        for (seg= 0; seg < 32; seg++) {
-            display_send_data(fb_font[test[k % sizeof(test)]], 8);
-            k++;
-        }
-
-        display_send_cmd1(SSD1306_SETSTARTLINE, row);
-    }
 }
 
