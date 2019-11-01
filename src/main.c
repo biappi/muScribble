@@ -68,34 +68,40 @@ void display_transport_write(char byte)
 
 // - //
 
+uint8_t nibble_char(uint8_t x) {
+    return (x < 10) ? ('0' + x) : ('a' + (x - 10));
+}
 
 void usb_midi_received_callback(const uint8_t * buf, size_t len) {
-    //                                1         2
-    //                      012345678901234567890123456
-    static char string[] = " * MIDI in 00000000 ";
+    //                                 1     1
+    //                       01234567890123456
+    static uint8_t string1[] = "* MIDI          ";
+    static uint8_t string2[] = "00 00 00 00 00  ";
 
-    int t  = len;
+    uint8_t byte;
+    
+    byte = buf[0];
+    string2[0]  = nibble_char((byte & 0xf0) >> 4);
+    string2[1]  = nibble_char((byte & 0x0f)     );
 
-    int t1 = (t      ) & 0xff;
-    int t2 = (t >>  8) & 0xff;
-    int t3 = (t >> 16) & 0xff;
-    int t4 = (t >> 24) & 0xff;
+    byte = buf[1];
+    string2[3]  = nibble_char((byte & 0xf0) >> 4);
+    string2[4]  = nibble_char((byte & 0x0f)     );
 
-    #define nibble_char(x) ((x < 10) ? '0' + x : 'a' + x)
+    byte = buf[2];
+    string2[6] = nibble_char((byte & 0xf0) >> 4);
+    string2[7] = nibble_char((byte & 0x0f)     );
 
-    string[18] = nibble_char((t1 >> 0) & 0x0f);
-    string[17] = nibble_char((t1 >> 4) & 0x0f);
+    byte = buf[3];
+    string2[9]  = nibble_char((byte & 0xf0) >> 4);
+    string2[10] = nibble_char((byte & 0x0f)     );
 
-    string[16] = nibble_char((t2 >> 0) & 0x0f);
-    string[15] = nibble_char((t2 >> 4) & 0x0f);
+    byte = buf[4];
+    string2[12] = nibble_char((byte & 0xf0) >> 4);
+    string2[13] = nibble_char((byte & 0x0f)     );
 
-    string[14] = nibble_char((t3 >> 0) & 0x0f);
-    string[13] = nibble_char((t3 >> 4) & 0x0f);
-
-    string[12] = nibble_char((t4 >> 0) & 0x0f);
-    string[11] = nibble_char((t4 >> 4) & 0x0f);
-
-    display_send_string(string);
+    display_send_string(string1);
+    display_send_string(string2);
 }
 
 // - //
@@ -166,13 +172,22 @@ int main(void)
 
     display_init();
 
+    display_send_string("* START         ");
+
     while (1) {
         usbd_poll(usbd_dev, 0);
         delay_counter++;
 
         if (delay_counter > 1000000) {
-            const char alive[] = "ALIVE 2 ]\r\n";
-            display_send_string("* ALIVE ");
+            static int i = 1;
+            if (i == 7) {
+                i = 0;
+                display_send_empty_screen(); 
+            }
+
+            i++;
+
+            display_send_string("* ALIVE         ");
             delay_counter = 0;
         }
     }

@@ -93,6 +93,7 @@ void display_send_empty_line(void) {
 }
 
 void display_send_empty_screen(void) {
+    display_goto_line(0);
     for (int i = 0; i < 8; i++)
         display_send_empty_line();
 }
@@ -106,7 +107,6 @@ void display_init(void) {
     display_send_cmd(SSD1306_DISPLAYOFF);
     display_send_cmd1(SSD1306_CHARGEPUMP, 0x14);
     display_send_cmd1(SSD1306_MEMORYMODE, 0x00);
-    display_goto_line(0);
     display_send_empty_screen();
     display_send_cmd(SSD1306_DISPLAYON);
 }
