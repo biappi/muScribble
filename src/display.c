@@ -75,7 +75,7 @@ static inline void display_send_cmd2(uint8_t cmd, uint8_t arg1, uint8_t arg2)
     display_transport_write(arg2);
 }
 
-static inline void display_send_character(char c) {
+void display_send_character(char c) {
     display_send_data(font[c], 8);
 }
 
@@ -93,14 +93,14 @@ void display_send_empty_line(void) {
 }
 
 void display_send_empty_screen(void) {
-    display_goto_line(0);
+    display_goto_line_column(0, 0);
     for (int i = 0; i < 8; i++)
         display_send_empty_line();
 }
 
-void display_goto_line(int line) {
+void display_goto_line_column(int line, int column) {
     display_send_cmd2(SSD1306_PAGEADDR, line & 0x0f, 0xff);
-    display_send_cmd2(SSD1306_COLUMNADDR, 0x00, WIDTH - 1);
+    display_send_cmd2(SSD1306_COLUMNADDR, column & 0x7f, WIDTH - 1);
 }
 
 void display_init(void) {

@@ -9,7 +9,9 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
-uint8_t logic_control_strip[116] = { 0 };
+
+char logic_control_strip[2][8][7] = { 0 };
+
 
 uint8_t nibble_char(uint8_t x) {
     return (x < 10) ? ('0' + x) : ('a' + (x - 10));
@@ -109,6 +111,7 @@ void sysex_parse(struct sysex_parser * parser, const uint8_t * packet)
     }
 }
 
+
 void usb_midi_received_callback(const uint8_t * buf, size_t len)
 {
     static struct sysex_parser parser = { 0 };
@@ -127,15 +130,26 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
             ) {
                 const uint8_t  offset =  midiData[6];
                 const uint8_t *src    = &midiData[7];
-                      uint8_t *dst    = (logic_control_strip + offset);
+                      uint8_t *dst    = (((uint8_t *)logic_control_strip) + offset);
 
                 while (*src != 0xf7) {
                     *dst++ = *src++;
                 }
 
-                display_goto_line(0);
-                display_send_string(logic_control_strip);
-                display_send_string("<<<");
+                for (int t = 0; t < 8; t++) {
+
+                    display_goto_line_column(t, 0);
+
+                    for (int i = 0; i < 7; i++) {
+                        display_send_character(logic_control_strip[0][t][i]);
+                    }
+
+                    display_goto_line_column(t, 64);
+
+                    for (int i = 0; i < 7; i++) {
+                        display_send_character(logic_control_strip[1][t][i]);
+                    }
+                }
             }
         }
 

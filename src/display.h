@@ -1,6 +1,7 @@
 void display_init(void);
-void display_goto_line(int line);
+void display_goto_line_column(int line, int column);
 void display_send_empty_screen(void);
+void display_send_character(char c);
 void display_send_string(const char *string);
 
 void display_transport_reset(void);
