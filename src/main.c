@@ -137,20 +137,21 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
                     *dst++ = *src++;
                 }
 
-if(0) {
                 for (int t = 0; t < 8; t++) {
-                    display_goto_line_column(t, 0);
+                    display_select(display_selection_1 + t);
+
+                    display_goto_line_column(2, 0);
 
                     for (int i = 0; i < 7; i++) {
                         display_send_character(logic_control_strip[0][t][i]);
                     }
 
-                    display_goto_line_column(t, 64);
+                    display_goto_line_column(3, 0);
 
                     for (int i = 0; i < 7; i++) {
                         display_send_character(logic_control_strip[1][t][i]);
                     }
-}
+
 
                 }
             }
