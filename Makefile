@@ -54,3 +54,7 @@ $(ELF_PATH): $(BUILD_DIR)/.build $(UCMX_A) $(OBJ_FILES)
 $(BIN_PATH): $(ELF_PATH)
 	$(OBJCOPY) -O binary $^ $@
 
+
+.PHONY: flash
+flash: $(BIN_PATH)
+	st-flash write $(BIN_PATH) 0x8000000
