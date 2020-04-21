@@ -38,7 +38,18 @@ static void platform_init_gpio_spi(void)
         GPIOA,
         GPIO_MODE_OUTPUT,
         GPIO_PUPD_PULLUP,
-        SPI_DISP_RESET | SPI_DISP_DC
+        DISP_CS1
+    );
+
+    gpio_mode_setup(
+        GPIOB,
+        GPIO_MODE_OUTPUT,
+        GPIO_PUPD_PULLUP,
+        (
+            SPI_DISP_RESET_PIN |
+            SPI_DISP_DC_PIN |
+            DISP_CS_PORTB
+        )
     );
 
     gpio_mode_setup(
@@ -63,6 +74,9 @@ static void platform_init_usb(void)
 
 static void platform_init_display(void)
 {
+    gpio_clear(GPIOA, DISP_CS_PORTA);
+    gpio_clear(GPIOB, DISP_CS_PORTB);
+
     spi_init(0, 0);
     display_transport_reset();
     display_init();
@@ -81,3 +95,4 @@ void platform_poll(void)
 {
     usbd_poll(usbd_dev, 0);
 }
+

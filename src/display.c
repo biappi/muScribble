@@ -1,4 +1,5 @@
 #include "display.h"
+#include "platform-private.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -109,5 +110,67 @@ void display_init(void) {
     display_send_cmd1(SSD1306_MEMORYMODE, 0x00);
     display_send_empty_screen();
     display_send_cmd(SSD1306_DISPLAYON);
+}
+
+void display_select_all() {
+    gpio_clear(GPIOA, DISP_CS_PORTA);
+    gpio_clear(GPIOB, DISP_CS_PORTB);
+}
+
+void display_select_none() {
+    gpio_set(GPIOA, DISP_CS_PORTA);
+    gpio_set(GPIOB, DISP_CS_PORTB);
+}
+
+void display_select(display_selection_t s) {
+    switch(s) {
+        case display_selection_1:
+            display_select_none();
+            gpio_clear(GPIOA, DISP_CS1);
+            break;
+
+        case display_selection_2:
+            display_select_none();
+            gpio_clear(GPIOB, DISP_CS2);
+            break;
+
+        case display_selection_3:
+            display_select_none();
+            gpio_clear(GPIOB, DISP_CS3);
+            break;
+
+        case display_selection_4:
+            display_select_none();
+            gpio_clear(GPIOB, DISP_CS4);
+            break;
+
+        case display_selection_5:
+            display_select_none();
+            gpio_clear(GPIOB, DISP_CS5);
+            break;
+
+        case display_selection_6:
+            display_select_none();
+            gpio_clear(GPIOB, DISP_CS6);
+            break;
+
+        case display_selection_7:
+            display_select_none();
+            gpio_clear(GPIOB, DISP_CS7);
+            break;
+
+        case display_selection_8:
+            display_select_none();
+            gpio_clear(GPIOB, DISP_CS8);
+            break;
+
+        case display_selection_all:
+            display_select_all();
+            break;
+
+        case display_selection_none:
+            display_select_none();
+            break;
+    }
 }
 

@@ -6,6 +6,7 @@
 #include "platform.h"
 #include "display.h"
 
+
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
@@ -136,8 +137,8 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
                     *dst++ = *src++;
                 }
 
+if(0) {
                 for (int t = 0; t < 8; t++) {
-
                     display_goto_line_column(t, 0);
 
                     for (int i = 0; i < 7; i++) {
@@ -149,6 +150,8 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
                     for (int i = 0; i < 7; i++) {
                         display_send_character(logic_control_strip[1][t][i]);
                     }
+}
+
                 }
             }
         }
@@ -157,11 +160,24 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
 }
 
 // - //
-
-
 int main(void)
 {
     platform_init();
+
+    display_select(display_selection_all);
+    display_goto_line_column(0, 0);
+
+    for (
+        display_selection_t s = display_selection_1;
+        s <= display_selection_8;
+        s++
+    ) {
+        //               012345678
+        char string[] = "DISPLAY 0";
+        string[8] = s - display_selection_1 + '1';
+        display_select(s);
+        display_send_string(string);
+    }
 
     while (1) {
         platform_poll();
