@@ -4,6 +4,10 @@ void display_send_empty_screen(void);
 void display_send_character(char c);
 void display_send_string(const char *string);
 
+void display_send_2x_width_character(char c);
+void display_send_2x_character_top(char c);
+void display_send_2x_character_bottom(char c);
+
 typedef enum {
     display_selection_1,
     display_selection_2,

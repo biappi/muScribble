@@ -140,19 +140,30 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
                 for (int t = 0; t < 8; t++) {
                     display_select(display_selection_1 + t);
 
-                    display_goto_line_column(2, 0);
+                    display_goto_line_column(0, 0);
 
                     for (int i = 0; i < 7; i++) {
-                        display_send_character(logic_control_strip[0][t][i]);
+                        display_send_2x_character_top(logic_control_strip[0][t][i]);
                     }
+
+                    display_goto_line_column(1, 0);
+
+                    for (int i = 0; i < 7; i++) {
+                        display_send_2x_character_bottom(logic_control_strip[0][t][i]);
+                    }
+
 
                     display_goto_line_column(3, 0);
 
                     for (int i = 0; i < 7; i++) {
-                        display_send_character(logic_control_strip[1][t][i]);
+                        display_send_2x_character_top(logic_control_strip[1][t][i]);
                     }
 
+                    display_goto_line_column(4, 0);
 
+                    for (int i = 0; i < 7; i++) {
+                        display_send_2x_character_bottom(logic_control_strip[1][t][i]);
+                    }
                 }
             }
         }
@@ -173,11 +184,22 @@ int main(void)
         s <= display_selection_8;
         s++
     ) {
-        //               012345678
-        char string[] = "DISPLAY 0";
-        string[8] = s - display_selection_1 + '1';
+        //               01234567
+        char string[] = "DISPLAY0";
+        string[7] = s - display_selection_1 + '1';
         display_select(s);
-        display_send_string(string);
+
+        char *s;
+
+        s = string;
+        while (*s != 0) {
+            display_send_2x_character_top(*s++);
+        }
+
+        s = string;
+        while (*s != 0) {
+            display_send_2x_character_bottom(*s++);
+        }
     }
 
     while (1) {

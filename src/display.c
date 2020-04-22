@@ -80,6 +80,72 @@ void display_send_character(char c) {
     display_send_data(font[c], 8);
 }
 
+void display_send_2x_width_character(char c) {
+    const uint8_t *glyph = font[c];
+    uint8_t doubled[8 * 2];
+
+    for (int i = 0; i < 8; i++) {
+        uint8_t line = glyph[i];
+
+        uint8_t top_line = line;
+
+        doubled[(i * 2)    ] = top_line;
+        doubled[(i * 2) + 1] = top_line;
+    }
+    
+    display_send_data(doubled, 16);
+}
+
+void display_send_2x_character_top(char c) {
+    const uint8_t *glyph = font[c];
+    uint8_t doubled[8 * 2];
+
+    for (int i = 0; i < 8; i++) {
+        uint8_t line = glyph[i];
+
+        uint8_t top_line = 
+            ((line & 0x01)     ) |
+            ((line & 0x01) << 1) |
+            ((line & 0x02) << 1) |
+            ((line & 0x02) << 2) |
+            ((line & 0x04) << 2) |
+            ((line & 0x04) << 3) |
+            ((line & 0x08) << 3) |
+            ((line & 0x08) << 4) 
+        ;
+
+        doubled[(i * 2)    ] = top_line;
+        doubled[(i * 2) + 1] = top_line;
+    }
+    
+    display_send_data(doubled, 16);
+}
+
+void display_send_2x_character_bottom(char c) {
+    const uint8_t *glyph = font[c];
+    uint8_t doubled[8 * 2];
+
+    for (int i = 0; i < 8; i++) {
+        uint8_t line = glyph[i];
+
+        uint8_t top_line = 
+            ((line & 0x10) >> 4) | 
+            ((line & 0x10) >> 3) |
+            ((line & 0x20) >> 3) |
+            ((line & 0x20) >> 2) |
+            ((line & 0x40) >> 2) |
+            ((line & 0x40) >> 1) |
+            ((line & 0x80) >> 1) |
+            ((line & 0x80)     ) 
+        ;
+
+        doubled[(i * 2)    ] = top_line;
+        doubled[(i * 2) + 1] = top_line;
+    }
+    
+    display_send_data(doubled, 16);
+}
+
 void display_send_string(const char *string) {
     while (*string != 0)
         display_send_character(*string++);
