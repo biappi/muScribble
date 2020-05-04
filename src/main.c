@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "platform.h"
 #include "display.h"
@@ -218,6 +219,15 @@ int main(void)
         if (logic_strip_dirty) {
             draw_logic_strip();
             logic_strip_dirty = 0;
+        }
+
+        {
+            display_select(display_selection_8);
+            display_goto_line_column(6, 0);
+
+            char buffer[8];
+            snprintf(buffer, sizeof(buffer), "%d", poll_time);
+            display_send_string(buffer);
         }
 
         do {
