@@ -189,8 +189,8 @@ void draw_at_startup()
         s++
     ) {
         //               01234567
-        char string[] = "DISPLAY0";
-        string[7] = s - display_selection_1 + '1';
+        char string[] = "DISP    ";
+        string[4] = s - display_selection_1 + '1';
         display_select(s);
 
         char *s;
