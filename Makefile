@@ -4,8 +4,8 @@ CC      := $(CROSS_COMPILE)gcc
 LD      := $(CROSS_COMPILE)gcc
 OBJCOPY := $(CROSS_COMPILE)objcopy
 
-CFLAGS  := -mcpu=cortex-m3 -mthumb -nostartfiles -mfloat-abi=soft -ffreestanding -nostdlib
-LDFLAGS := -mcpu=cortex-m3 -mthumb -nostartfiles -Wl,-gc-sections
+CFLAGS  := -mcpu=cortex-m3 -mthumb -nostartfiles -mfloat-abi=soft -ffreestanding
+LDFLAGS := -mcpu=cortex-m3 -mthumb -nostartfiles -Wl,-gc-sections -specs=nosys.specs
 
 # - #
 
