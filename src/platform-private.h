@@ -1,6 +1,8 @@
 #include <unicore-mx/stm32/rcc.h>
 #include <unicore-mx/stm32/gpio.h>
 #include <unicore-mx/stm32/otg_hs.h>
+#include <unicore-mx/cm3/systick.h>
+
 #include <unicore-mx/usbd/usbd.h>
 #include <unicore-mx/usb/class/cdc.h>
 #include <unicore-mx/usb/class/audio.h>

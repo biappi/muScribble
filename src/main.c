@@ -12,7 +12,7 @@
 
 
 char logic_control_strip[2][8][7] = { 0 };
-
+char logic_strip_dirty = 0;
 
 uint8_t nibble_char(uint8_t x) {
     return (x < 10) ? ('0' + x) : ('a' + (x - 10));
@@ -137,34 +137,7 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
                     *dst++ = *src++;
                 }
 
-                for (int t = 0; t < 8; t++) {
-                    display_select(display_selection_1 + t);
-
-                    display_goto_line_column(0, 0);
-
-                    for (int i = 0; i < 7; i++) {
-                        display_send_2x_character_top(logic_control_strip[0][t][i]);
-                    }
-
-                    display_goto_line_column(1, 0);
-
-                    for (int i = 0; i < 7; i++) {
-                        display_send_2x_character_bottom(logic_control_strip[0][t][i]);
-                    }
-
-
-                    display_goto_line_column(3, 0);
-
-                    for (int i = 0; i < 7; i++) {
-                        display_send_2x_character_top(logic_control_strip[1][t][i]);
-                    }
-
-                    display_goto_line_column(4, 0);
-
-                    for (int i = 0; i < 7; i++) {
-                        display_send_2x_character_bottom(logic_control_strip[1][t][i]);
-                    }
-                }
+                logic_strip_dirty = 1;
             }
         }
 
@@ -172,10 +145,41 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
 }
 
 // - //
-int main(void)
-{
-    platform_init();
 
+void draw_logic_strip()
+{
+    for (int t = 0; t < 8; t++) {
+        display_select(display_selection_1 + t);
+
+        display_goto_line_column(0, 0);
+
+        for (int i = 0; i < 7; i++) {
+            display_send_2x_character_top(logic_control_strip[0][t][i]);
+        }
+
+        display_goto_line_column(1, 0);
+
+        for (int i = 0; i < 7; i++) {
+            display_send_2x_character_bottom(logic_control_strip[0][t][i]);
+        }
+
+
+        display_goto_line_column(3, 0);
+
+        for (int i = 0; i < 7; i++) {
+            display_send_2x_character_top(logic_control_strip[1][t][i]);
+        }
+
+        display_goto_line_column(4, 0);
+
+        for (int i = 0; i < 7; i++) {
+            display_send_2x_character_bottom(logic_control_strip[1][t][i]);
+        }
+    }
+}
+
+void draw_at_startup()
+{
     display_select(display_selection_all);
     display_goto_line_column(0, 0);
 
@@ -201,9 +205,26 @@ int main(void)
             display_send_2x_character_bottom(*s++);
         }
     }
+}
+
+int main(void)
+{
+    platform_init();
+    draw_at_startup();
 
     while (1) {
-        platform_poll();
+        uint32_t poll_time = platform_jiffies();
+
+        if (logic_strip_dirty) {
+            draw_logic_strip();
+            logic_strip_dirty = 0;
+        }
+
+        do {
+            platform_poll();
+            WFI();
+        } while(poll_time == platform_jiffies());
     }
+
 }
 

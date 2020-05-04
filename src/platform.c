@@ -7,6 +7,8 @@
 
 usbd_device *usbd_dev;
 
+static volatile uint32_t jiffies = 0;
+
 static void platform_init_clock(void)
 {
     rcc_clock_setup_hse_3v3(&rcc_hse_25mhz_3v3[RCC_CLOCK_3V3_48MHZ]);
@@ -82,6 +84,25 @@ static void platform_init_display(void)
     display_init();
 }
 
+void sys_tick_handler()
+{
+    jiffies++;
+}
+
+uint32_t platform_jiffies(void)
+{
+    return jiffies;
+}
+
+static void platform_init_systick(void)
+{
+    /* clock rate / 1000 to get 1mS interrupt rate */
+    systick_set_reload(168000);
+    systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
+    systick_counter_enable();
+    systick_interrupt_enable();
+}
+
 void platform_init(void)
 {
     platform_init_clock();
@@ -89,6 +110,7 @@ void platform_init(void)
     platform_init_gpio_spi();
     platform_init_display();
     platform_init_usb();
+    platform_init_systick();
 }
 
 void platform_poll(void)
