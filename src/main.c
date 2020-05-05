@@ -167,6 +167,43 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
 
 // - //
 
+void draw_peak_levels(uint8_t t)
+{
+    #define bar_size 128
+
+    uint8_t data[bar_size] = { 0 };
+
+    int l = logic_peak_levels[t];
+    int e = 0;
+
+    if (l) {
+        l = MIN(l, 0xc);
+
+        e = (l * 128) / 12 - logic_peak_offset[t];
+        logic_peak_offset[t] -= 8;
+        if (e < 0) {
+            e = 0;
+            logic_peak_levels[t] = 0;
+        }
+    }
+
+    for (int i = 0; i < bar_size; i++) {
+        bool    is_on     = (i < e);
+        bool    is_odd    = ((i % 2) == 0);
+        bool    tick      = ((i % 4) == 0);
+        bool    tick_mask = 0x3c;
+
+        uint8_t mark      = 0x00; // tick ? 0x42 : 0x00;
+        uint8_t border    = 0x81;
+        uint8_t dot       = is_on && is_odd ? 0xff : 0x00;
+
+        data[i] = dot | border;
+    }
+
+    display_send_data(data, bar_size);
+
+}
+
 void draw_logic_strip()
 {
     for (int t = 0; t < 8; t++) {
@@ -197,29 +234,7 @@ void draw_logic_strip()
         }
 
         display_goto_line_column(6, 0);
-
-        #define bar_size 128
-        uint8_t data[bar_size] = { 0 };
-
-        int l = logic_peak_levels[t];
-        int e = 0;
-
-        if (l) {
-            l = MIN(l, 0xc);
-
-            e = (l * 128) / 12 - logic_peak_offset[t];
-            logic_peak_offset[t] -= 3;
-            if (e < 0) {
-                e = 0;
-                logic_peak_levels[t] = 0;
-            }
-        }
-
-        for (int i = 0; i < e; i++) {
-            data[i] = 0xff;
-        }
-
-        display_send_data(data, bar_size);
+        draw_peak_levels(t);
     }
 }
 
