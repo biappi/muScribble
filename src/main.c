@@ -16,7 +16,6 @@ char logic_peak_levels[8] = { 0 };
 char logic_peak_offset[8] = { 0 };
 
 char logic_control_strip[2][8][7] = { 0 };
-char logic_strip_dirty = 0;
 
 uint8_t nibble_char(uint8_t x) {
     return (x < 10) ? ('0' + x) : ('a' + (x - 10));
@@ -138,7 +137,6 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
                 const uint8_t channel = (packet[2] & 0x70) >> 4;
                 logic_peak_levels[channel] = level;
                 logic_peak_offset[channel] = 0;
-                logic_strip_dirty = 1;
                 break;
             }
         }
@@ -161,8 +159,6 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
                 while (*src != 0xf7) {
                     *dst++ = *src++;
                 }
-
-                logic_strip_dirty = 1;
             }
         }
 
@@ -187,7 +183,6 @@ void draw_logic_strip()
         for (int i = 0; i < 7; i++) {
             display_send_2x_character_bottom(logic_control_strip[0][t][i]);
         }
-
 
         display_goto_line_column(3, 0);
 
@@ -262,29 +257,30 @@ int main(void)
     platform_init();
     draw_at_startup();
 
-    const uint32_t jiffies_mult = 20; // redraw every N jiffies_mult
+    const uint32_t jiffies_mult = 10; // redraw every N jiffies_mult
 
     while (1) {
         uint32_t poll_time = platform_jiffies();
 
-        if (logic_strip_dirty) {
-            draw_logic_strip();
-            logic_strip_dirty = 0;
-        }
+        draw_logic_strip();
 
+        uint32_t after_draw = platform_jiffies();
+        
         {
             display_select(display_selection_8);
             display_goto_line_column(6, 0);
 
             char buffer[8];
-            snprintf(buffer, sizeof(buffer), "%d", poll_time);
+            snprintf(buffer, sizeof(buffer), "%d", after_draw - poll_time);
             display_send_string(buffer);
         }
 
-        do {
-            platform_poll();
-            WFI();
-        } while((poll_time * jiffies_mult) < platform_jiffies());
+        for (int i = 0; i < 10; i++) {
+            do {
+                platform_poll();
+                WFI();
+            } while(poll_time == platform_jiffies());
+        }
     }
 
 }
