@@ -45,10 +45,8 @@ extern const unsigned char font[256][8];
 #define SSD1306_ACTIVATE_SCROLL                      0x2F
 #define SSD1306_SET_VERTICAL_SCROLL_AREA             0xA3
 
-static void display_send_data(const uint8_t *buf, const size_t len)
+void display_send_data(const uint8_t *buf, const size_t len)
 {
-    /* TODO: CS */
-
     display_transport_set_data();
 
     for (int i = 0; i < len; i++)

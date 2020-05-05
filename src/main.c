@@ -12,6 +12,9 @@
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
 
+char logic_peak_levels[8] = { 0 };
+char logic_peak_offset[8] = { 0 };
+
 char logic_control_strip[2][8][7] = { 0 };
 char logic_strip_dirty = 0;
 
@@ -46,6 +49,7 @@ enum usb_midi_packet_types {
     usb_midi_sysex_ends_single_byte  = 0x05,
     usb_midi_sysex_ends_two_bytes    = 0x06,
     usb_midi_sysex_ends_three_bytes  = 0x07,
+    usb_midi_channel_pressure        = 0x0d,
 };
 
 
@@ -119,7 +123,27 @@ void usb_midi_received_callback(const uint8_t * buf, size_t len)
     static struct sysex_parser parser = { 0 };
 
     for (int i = 0; i < len / 4; i++) {
-        sysex_parse(&parser, buf + (i * 4));
+        const uint8_t 
+        *packet = buf + (i * 4);
+
+        const uint8_t
+        cable_id    = (packet[0] & 0xf0) >> 0;
+
+        const enum usb_midi_packet_types
+        packet_type = (packet[0] & 0x0f);
+
+        switch (packet_type) {
+            case usb_midi_channel_pressure: {
+                const uint8_t level   = (packet[2] & 0x0f);
+                const uint8_t channel = (packet[2] & 0x70) >> 4;
+                logic_peak_levels[channel] = level;
+                logic_peak_offset[channel] = 0;
+                logic_strip_dirty = 1;
+                break;
+            }
+        }
+
+        sysex_parse(&parser, packet);
 
         if (parser.state == sysex_parser_ended) {
             const uint8_t * midiData = parser.sysex.buf;
@@ -176,6 +200,31 @@ void draw_logic_strip()
         for (int i = 0; i < 7; i++) {
             display_send_2x_character_bottom(logic_control_strip[1][t][i]);
         }
+
+        display_goto_line_column(6, 0);
+
+        #define bar_size 128
+        uint8_t data[bar_size] = { 0 };
+
+        int l = logic_peak_levels[t];
+        int e = 0;
+
+        if (l) {
+            l = MIN(l, 0xc);
+
+            e = (l * 128) / 12 - logic_peak_offset[t];
+            logic_peak_offset[t] -= 3;
+            if (e < 0) {
+                e = 0;
+                logic_peak_levels[t] = 0;
+            }
+        }
+
+        for (int i = 0; i < e; i++) {
+            data[i] = 0xff;
+        }
+
+        display_send_data(data, bar_size);
     }
 }
 

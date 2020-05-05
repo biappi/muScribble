@@ -1,5 +1,9 @@
+#include <stdlib.h>
+#include <stdint.h>
+
 void display_init(void);
 void display_goto_line_column(int line, int column);
+void display_send_data(const uint8_t *buf, const size_t len);
 void display_send_empty_screen(void);
 void display_send_character(char c);
 void display_send_string(const char *string);
