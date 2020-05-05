@@ -272,7 +272,7 @@ int main(void)
     platform_init();
     draw_at_startup();
 
-    const uint32_t jiffies_mult = 10; // redraw every N jiffies_mult
+    const uint32_t jiffies_mult = 30; // redraw every N jiffies_mult
 
     while (1) {
         uint32_t poll_time = platform_jiffies();
@@ -290,7 +290,7 @@ int main(void)
             display_send_string(buffer);
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < jiffies_mult; i++) {
             do {
                 platform_poll();
                 WFI();
