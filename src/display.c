@@ -238,3 +238,9 @@ void display_select(display_selection_t s) {
     }
 }
 
+void display_set_color_inverted(bool x) {
+    if (x)
+        display_send_cmd(SSD1306_INVERTDISPLAY);
+    else
+        display_send_cmd(SSD1306_NORMALDISPLAY);
+}
