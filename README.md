@@ -30,7 +30,7 @@ the application code to any microcontroller of choice.
 
 ## Hardware design files
 
-The hardware is designed using the [KiCad EDA](https://kicad-pcb.org)
+The hardware is designed using the [KiCad EDA](https://kicad.org)
 
 * [KiCad project directory](hardware/kicad)
 * [Schematic diagram PDF](hardware/images/schema.pdf)
